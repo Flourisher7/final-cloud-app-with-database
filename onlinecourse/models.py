@@ -115,17 +115,22 @@ class Enrollment(models.Model):
     #        return False
 
 class  Question(models.Model):
-    question_text = models.CharField(max_length=500, default="question_text")
-    grade = models.IntegerField(default=0)
+    question_text = models.CharField(max_length=500)
+    grade = models.FloatField(default=0)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
     def is_get_score(self, selected_ids):
         all_answers = self.choice_set.filter(is_correct=True).count()
-        selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
+        selected_correct = self.choice_set.filter(is_correct=True, 
+            id__in=selected_ids).count()
         if all_answers == selected_correct:
             return True
         else:
             return False
+
+    def __str__(self):
+        return self.question_text
 #  <HINT> Create a Choice Model with:
     # Used to persist choice content for a question
     # One-To-Many (or Many-To-Many if you want to reuse choices) relationship with Question
@@ -135,9 +140,16 @@ class  Question(models.Model):
 # class Choice(models.Model):
 
 class Choice(models.Model):
-    choice_text = models.CharField(max_length=500, default="question_text")
-    is_correct = models.BooleanField(default=True)
+    choice_text = models.CharField(max_length=500)
+    is_correct = models.BooleanField(default=False)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
+
+    def get_dirs(self):
+        got_dirs = dir(self)
+        return list(got_dirs)
+
+    def __str__(self):
+        return self.choice_text
 
 # <HINT> The submission model
 # One enrollment could have multiple submission
@@ -147,3 +159,26 @@ class Submission(models.Model):
     enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
     choices = models.ManyToManyField(Choice)
 #    Other fields and methods you would like to design
+
+    def get_dirs(self):
+        got_dirs = dir(self)
+        return list(got_dirs)
+
+    def calculate_grade(self):
+        total_correct = []
+        total_wrong =[]
+
+        for choice in self.choices.all():
+            if (choice.is_correct):
+                total_correct.append(choice)
+            else:
+                total_wrong.append(choice)
+        grade = 100 * (len(total_correct) /(len(total_correct) + len(total_wrong)))
+
+        return int(grade)
+
+    def __str__(self):
+        return f'Submission {self.pk}'
+
+    def get_choices(self):
+        return list(self.choices)
