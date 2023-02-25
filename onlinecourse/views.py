@@ -102,7 +102,51 @@ def enroll(request, course_id):
 
     return HttpResponseRedirect(reverse(viewname='onlinecourse:course_details', args=(course.id,)))
 
+def submit(request, course_id):
+    if request.method == "POST":
+        context = {}
+        user = request.user
+        course = get_object_or_404(Course, pk=course_id)
+        enrollment = get_object_or_404(Enrollment, user=user, course=course)
+        submission = Submission.objects.create(enrollment=enrollment)
 
+        def extract_answers_ids(request):
+            submitted_answers = []
+            for key in request.POST:
+                if key.startswith('choice'):
+                    value = request.POST[key]
+                    choice_id = int(value)
+                    submitted_answers.append(choice_id)
+            return submitted_answers
+
+        answer_ids = extract_answers_ids(request)
+
+        def extract_answers(request):
+            submitted_answers = []
+            for key in request.POST:
+                if key.startswith('choice_text'):
+                    value = request.POST[key]
+                    choice_id = int(value)
+                    submitted_answers.append(choice_id)
+            return submitted_answers
+
+        answers = extract_answers(request)
+
+        for answer_id in answer_ids:
+            choice = get_object_or_404(
+                Choice, pk=answer_id)
+            submission.choices.add(choice)
+
+        submission.save()
+
+        context = {
+            'submission_id': submission.id,
+            'submission': submission,
+            'choices': submission.choices,
+            'answer_ids': answer_ids,
+            'answers': answers,
+        }
+        return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
 # <HINT> Create a submit view to create an exam submission record for a course enrollment,
 # you may implement it based on following logic:
          # Get user and course object, then get the associated enrollment object created when the user enrolled the course

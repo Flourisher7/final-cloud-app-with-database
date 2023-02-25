@@ -41,15 +41,55 @@
 
     <!-- Page content -->
     <div class="container-fluid">
-            <h2>{{ course.name }}</h2>
-            <div class="card-columns-vertical">
-                {% for lesson in course.lesson_set.all %}
-                    <div class="card mt-1">
-                        <div class="card-header"><h5>Lesson {{lesson.order|add:1}}: {{lesson.title}}</h5></div>
-                        <div class="card-body">{{lesson.content}}</div>
-                    </div>
-                {% endfor %}
+        <h2>{{ course.name }}</h2>
+        <div class="card-columns-vertical">
+            {% for lesson in course.lesson_set.all %}
+            <div class="card mt-1">
+                <div class="card-header">
+                    <h5>Lesson {{lesson.order|add:1}}: {{lesson.title}}</h5>
+                </div>
+                <div class="card-body">{{lesson.content}}</div>
+                <!-- A collapse example here: -->
+                <div class="card-header">
+                    <a class="btn btn-block collapsed" data-toggle="collapse" href="#exam-{{ lesson.id }}" role="button"
+                        aria-expanded="false" aria-controls="exam-{{ lesson.id }}">
+                        Open Exam
+                    </a>
+                </div>
+                <div id="exam-{{ lesson.id }}" class="collapse show">
+                    Click to expand
+                    <form id="questionform" action="{% url 'onlinecourse:submit' course.id %}" method="post">
+                        {% for lesson in course.lesson_set.all %}
+                        <div class="course-container">
+                            <h3>{{ course.name }}</h3>
+                            {% for question in course.question_set.all %}
+                            <div class="card mt-1">
+                                <div class="card-header">
+                                    <h5>{{ question.question_text}}</h5>
+                                </div>
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    {% for choice in question.choice_set.all %}
+                                    <div class="form-check">
+                                        <label class="form-check-label">
+                                            <input type="checkbox" name="choice_{{choice.id}}" class="form-check-input"
+                                                id="{{choice.id}}" value="{{choice.id}}">{{ choice.choice_text }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                        <input class="btn btn-success btn-block" type="submit" value="Submit">
+                    </form>
+
+                </div>
             </div>
+            {% endfor %}
+        </div>
+    </div>
             <!-- Task: show questions and choices -->
             <!-- <HINT> Use Bootstrap Collapse to hide exam first, more details could be found here
             https://www.w3schools.com/bootstrap4/bootstrap_collapse.asp-->
@@ -75,7 +115,7 @@
             <input type="check" name="choice_{{choice.id}}" id="{{choice.id}}" ...>
             -->
 
-            <!-- A choice submission form example -->
+            <!-- A choice submission form example 
             <form id="questionform" action="point to a submit view" method="post">
                         ... for each question in the course ...
                         <div class="card mt-1">
@@ -93,10 +133,9 @@
                             </div>
                         </div>
                     <input class="btn btn-success btn-block" type="submit" value="Submit">
-            </form> 
+            </form> -->
 
             <!--Check here to see more details Bootstrap checkbox
              https://www.w3schools.com/bootstrap4/bootstrap_forms_inputs.asp-->
-    </div>
 </body>
 </html>
