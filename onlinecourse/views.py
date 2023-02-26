@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 # <HINT> Import any new Models here
-from .models import Course, Enrollment
+from .models import Course, Enrollment, Question, Choice, Submission
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
@@ -147,6 +147,30 @@ def submit(request, course_id):
             'answers': answers,
         }
         return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
+
+def show_exam_result(request, course_id):
+    context = {}
+    submission_id = request.POST['submission_id']
+    answer_ids = request.answer_ids
+    courses = Course.objects.order_by('-total_enrollment')[:10]
+    course = get_object_or_404(Course, pk=course_id)
+    lesson = get_object_or_404(Lesson, pk=course_id)
+    score = submission.calculate_score()
+    submission = Submission.objects.get(pk=submission_id)
+
+    context = {
+        'course': course,
+        'courses': courses,
+        'submission': submission,
+        'submission_id': submission_id,
+        'choices': submission.choices,
+        'answer_ids': answer_ids,
+        'score': score,
+        'lesson': lesson,
+    }
+
+    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
+    
 # <HINT> Create a submit view to create an exam submission record for a course enrollment,
 # you may implement it based on following logic:
          # Get user and course object, then get the associated enrollment object created when the user enrolled the course
